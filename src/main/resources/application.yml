@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: SpecShield
+server:
+  servlet:
+    context-path: /specshield
+  port: 9000
