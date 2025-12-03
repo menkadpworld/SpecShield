@@ -9,7 +9,7 @@ public class TestExecution {
     private String id;
     private LocalDateTime timestamp;
     private String scenario;
-    private String expectedResult;
+    private ExpectedResult expectedResult;
     private String result;
     private String resultDetails;
     private String contractPath;

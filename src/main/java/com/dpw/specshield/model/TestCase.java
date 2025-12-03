@@ -5,8 +5,8 @@ import lombok.Data;
 @Data
 public class TestCase {
     private String testCaseId;
-    private String testType;
+    private String testType; // happypath, negative, schema-validation
     private Endpoint endpoint;
-    private Request request;
-    private Expected expected;
+    private TestRequest request;
+    private ExpectedResult expected;
 }

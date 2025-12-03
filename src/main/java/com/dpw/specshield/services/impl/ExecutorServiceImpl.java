@@ -1,6 +1,12 @@
 package com.dpw.specshield.services.impl;
 
-import com.dpw.specshield.model.*;
+import com.dpw.specshield.model.ExpectedResult;
+import com.dpw.specshield.model.TestAssertion;
+import com.dpw.specshield.model.TestCase;
+import com.dpw.specshield.model.TestExecution;
+import com.dpw.specshield.model.TestExecutionRequest;
+import com.dpw.specshield.model.TestResult;
+import com.dpw.specshield.model.TestSuite;
 import com.dpw.specshield.services.IExecutorService;
 import com.dpw.specshield.repository.TestResultRepository;
 import com.dpw.specshield.repository.TestExecutionRequestRepository;
@@ -242,7 +248,7 @@ public class ExecutorServiceImpl implements IExecutorService {
         execution.setId(testCase.getTestCaseId());
         execution.setTimestamp(executionTime);
         execution.setScenario(buildScenario(testCase));
-        execution.setExpectedResult(buildExpectedResult(testCase.getExpected()));
+        execution.setExpectedResult(testCase.getExpected());
         execution.setContractPath(testCase.getEndpoint().getUrl());
         execution.setHttpMethod(testCase.getEndpoint().getMethod().toLowerCase());
 
@@ -251,7 +257,7 @@ public class ExecutorServiceImpl implements IExecutorService {
             String fullUrl = buildFullUrl(testCase, baseUrl);
             execution.setFullRequestPath(fullUrl);
 
-            boolean testPassed = validateResponse(response, testCase.getExpected());
+            boolean testPassed = validateResponse(response, execution.getExpectedResult());
 
             if (testPassed) {
                 execution.setResult("success");
@@ -260,7 +266,7 @@ public class ExecutorServiceImpl implements IExecutorService {
             } else {
                 execution.setResult("error");
                 execution.setResultDetails(String.format("Unexpected behaviour: expected [%d], actual [%d]",
-                        testCase.getExpected().getStatusCode(), response.getStatusCode().value()));
+                        execution.getExpectedResult().getStatusCode(), response.getStatusCode().value()));
             }
 
             execution.setRequestDetails(buildRequestDetails(testCase, fullUrl));
@@ -330,14 +336,15 @@ public class ExecutorServiceImpl implements IExecutorService {
         return fullUrl;
     }
 
-    private boolean validateResponse(ResponseEntity<String> response, Expected expected) {
-        if (!Integer.valueOf(response.getStatusCode().value()).equals(expected.getStatusCode())) {
+
+    private boolean validateResponse(ResponseEntity<String> response, ExpectedResult expectedResult) {
+        if (!Integer.valueOf(response.getStatusCode().value()).equals(expectedResult.getStatusCode())) {
             return false;
         }
 
-        if (expected.getAssertions() != null && response.getBody() != null) {
-            for (Assertion assertion : expected.getAssertions()) {
-                if (!validateAssertion(response.getBody(), assertion)) {
+        if (expectedResult.getAssertions() != null && response.getBody() != null) {
+            for (TestAssertion assertion : expectedResult.getAssertions()) {
+                if (!validateTestAssertion(response.getBody(), assertion)) {
                     return false;
                 }
             }
@@ -346,7 +353,8 @@ public class ExecutorServiceImpl implements IExecutorService {
         return true;
     }
 
-    private boolean validateAssertion(String responseBody, Assertion assertion) {
+
+    private boolean validateTestAssertion(String responseBody, TestAssertion assertion) {
         try {
             Object value = JsonPath.read(responseBody, assertion.getJsonPath());
 
@@ -356,12 +364,12 @@ public class ExecutorServiceImpl implements IExecutorService {
                 case "NOT_NULL":
                     return value != null;
                 case "EQUALS":
-                    return Objects.equals(value, assertion.getExpectedValue());
+                    return Objects.equals(value != null ? value.toString() : null, assertion.getExpectedValue());
                 default:
                     return true;
             }
         } catch (Exception e) {
-            log.warn("Failed to validate assertion {}: {}", assertion.getJsonPath(), e.getMessage());
+            log.warn("Failed to validate test assertion {}: {}", assertion.getJsonPath(), e.getMessage());
             return false;
         }
     }
@@ -371,9 +379,6 @@ public class ExecutorServiceImpl implements IExecutorService {
                 testCase.getEndpoint().getMethod(), testCase.getEndpoint().getUrl());
     }
 
-    private String buildExpectedResult(Expected expected) {
-        return String.format("Should return [%d]", expected.getStatusCode());
-    }
 
     private TestExecution.RequestDetails buildRequestDetails(TestCase testCase, String fullUrl) {
         TestExecution.RequestDetails details = new TestExecution.RequestDetails();

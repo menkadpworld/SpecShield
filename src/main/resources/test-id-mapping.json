@@ -1,0 +1,17 @@
+{
+  "vendors": { "id": 1 },
+  "vehicles": { "id": 1 },
+  "products": { "id": 1 },
+  "routes": { "id": 1 },
+  "models": { "id": 1 },
+  "currency-types": { "id": 1 },
+  "organisation-hierarchies": { "id": 1 },
+  "facilities": { "id": 1 },
+  "makes": { "id": 1 },
+  "container-types": { "id": 1 },
+  "vehicle-operators": { "id": 1 },
+  "tags": { "id": 1 },
+  "vehicle-types": { "id": 1 },
+  "principals": { "id": 1 },
+  "error-report": { "id": 1 }
+}
