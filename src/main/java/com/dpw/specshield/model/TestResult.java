@@ -19,5 +19,7 @@ public class TestResult {
     private Integer successfulTests;
     private Integer errorTests;
     private Integer warningTests;
+    private Integer pendingTests;
+    private String status; // PENDING, PROCESSING, COMPLETED, FAILED
     private List<TestExecution> executions;
 }
