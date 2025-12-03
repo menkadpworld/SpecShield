@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 public class ReportCollectorImpl implements IReportCollector {
 
     private final TestResultRepository testResultRepository;
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss Z");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss").withZone(java.time.ZoneId.systemDefault());
 
     @Override
     public TestReportResponse getReportById(String reportId) {
@@ -26,7 +26,7 @@ public class ReportCollectorImpl implements IReportCollector {
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + reportId));
 
         TestReportResponse response = new TestReportResponse();
-        response.setReportTimestamp(testResult.getExecutionEndTime().format(FORMATTER));
+        response.setReportTimestamp(testResult.getExecutionEndTime().atZone(java.time.ZoneId.systemDefault()).format(FORMATTER) + " +0530");
 
         TestReportResponse.Overview overview = new TestReportResponse.Overview();
         overview.setExecutionTime(testResult.getExecutionDuration());

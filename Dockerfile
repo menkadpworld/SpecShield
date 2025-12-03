@@ -1,8 +1,8 @@
-FROM openjdk:21-jdk-slim
+FROM openjdk:21-ea-21-jdk-slim-buster
 
 WORKDIR /app
 
-COPY build/libs/*.jar app.jar
+COPY build/libs/specshield-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 9000
 

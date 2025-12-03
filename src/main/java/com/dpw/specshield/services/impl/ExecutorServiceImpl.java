@@ -44,8 +44,8 @@ public class ExecutorServiceImpl implements IExecutorService {
 
             List<CompletableFuture<List<TestExecution>>> futures = groupedByUrl.entrySet()
                     .stream()
-                    .map(entry -> executeTestGroup(entry.getKey(), entry.getValue()))
-                    .collect(Collectors.toList());
+                    .map(entry -> executeTestGroup(entry.getKey(), entry.getValue(), testSuite.getBaseUrl()))
+                    .toList();
 
             List<TestExecution> allExecutions = futures.stream()
                     .map(CompletableFuture::join)
@@ -56,6 +56,12 @@ public class ExecutorServiceImpl implements IExecutorService {
             Duration duration = Duration.between(startTime, endTime);
 
             TestResult testResult = buildTestResult(testSuite, startTime, endTime, duration, allExecutions);
+
+            // Use the provided ID from the request
+            if (testSuite.getId() != null) {
+                testResult.setId(testSuite.getId());
+            }
+
             testResult = testResultRepository.save(testResult);
 
             log.info("Test suite execution completed: {} with {} tests",
@@ -77,17 +83,17 @@ public class ExecutorServiceImpl implements IExecutorService {
         return "localhost";
     }
 
-    private CompletableFuture<List<TestExecution>> executeTestGroup(String baseUrl, List<TestCase> testCases) {
+    private CompletableFuture<List<TestExecution>> executeTestGroup(String urlGroup, List<TestCase> testCases, String baseUrl) {
         return CompletableFuture.supplyAsync(() -> {
-            log.info("Executing {} test cases for URL group: {}", testCases.size(), baseUrl);
+            log.info("Executing {} test cases for URL group: {}", testCases.size(), urlGroup);
 
             return testCases.stream()
-                    .map(this::executeTestCase)
+                    .map(testCase -> executeTestCase(testCase, baseUrl))
                     .collect(Collectors.toList());
         });
     }
 
-    private TestExecution executeTestCase(TestCase testCase) {
+    private TestExecution executeTestCase(TestCase testCase, String baseUrl) {
         LocalDateTime executionTime = LocalDateTime.now();
         TestExecution execution = new TestExecution();
 
@@ -99,8 +105,8 @@ public class ExecutorServiceImpl implements IExecutorService {
         execution.setHttpMethod(testCase.getEndpoint().getMethod().toLowerCase());
 
         try {
-            ResponseEntity<String> response = makeHttpRequest(testCase);
-            String fullUrl = buildFullUrl(testCase);
+            ResponseEntity<String> response = makeHttpRequest(testCase, baseUrl);
+            String fullUrl = buildFullUrl(testCase, baseUrl);
             execution.setFullRequestPath(fullUrl);
 
             boolean testPassed = validateResponse(response, testCase.getExpected());
@@ -120,8 +126,8 @@ public class ExecutorServiceImpl implements IExecutorService {
         } catch (WebClientResponseException e) {
             execution.setResult("error");
             execution.setResultDetails(String.format("HTTP Error: %s", e.getMessage()));
-            execution.setFullRequestPath(buildFullUrl(testCase));
-            execution.setRequestDetails(buildRequestDetails(testCase, buildFullUrl(testCase)));
+            execution.setFullRequestPath(buildFullUrl(testCase, baseUrl));
+            execution.setRequestDetails(buildRequestDetails(testCase, buildFullUrl(testCase, baseUrl)));
         } catch (Exception e) {
             log.error("Error executing test case {}: {}", testCase.getTestCaseId(), e.getMessage());
             execution.setResult("error");
@@ -131,8 +137,8 @@ public class ExecutorServiceImpl implements IExecutorService {
         return execution;
     }
 
-    private ResponseEntity<String> makeHttpRequest(TestCase testCase) {
-        String url = buildFullUrl(testCase);
+    private ResponseEntity<String> makeHttpRequest(TestCase testCase, String baseUrl) {
+        String url = buildFullUrl(testCase, baseUrl);
         HttpMethod method = HttpMethod.valueOf(testCase.getEndpoint().getMethod().toUpperCase());
 
         WebClient.RequestHeadersSpec<?> request;
@@ -160,7 +166,7 @@ public class ExecutorServiceImpl implements IExecutorService {
         return request.retrieve().toEntity(String.class).block();
     }
 
-    private String buildFullUrl(TestCase testCase) {
+    private String buildFullUrl(TestCase testCase, String baseUrl) {
         String url = testCase.getEndpoint().getUrl();
 
         if (testCase.getRequest().getPathParams() != null) {
@@ -177,11 +183,9 @@ public class ExecutorServiceImpl implements IExecutorService {
             url = urlBuilder.toString().replaceAll("&$", "");
         }
 
-        if (!url.startsWith("http")) {
-            url = "http://localhost:8080" + url;
-        }
-
-        return url;
+        // Use provided baseUrl instead of hardcoded localhost
+        String fullUrl = baseUrl + url;
+        return fullUrl;
     }
 
     private boolean validateResponse(ResponseEntity<String> response, Expected expected) {
@@ -277,8 +281,6 @@ public class ExecutorServiceImpl implements IExecutorService {
     }
 
     private String formatDuration(Duration duration) {
-        long minutes = duration.toMinutes();
-        long seconds = duration.getSeconds() % 60;
-        return String.format("%dm%ds", minutes, seconds);
+        return duration.toMillis() + "ms";
     }
 }
