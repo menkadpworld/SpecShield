@@ -1,0 +1,14 @@
+.git
+.gradle
+build/classes/
+build/generated/
+build/reports/
+build/resources/
+build/test-results/
+build/tmp/
+*.log
+.idea/
+*.iml
+.DS_Store
+node_modules/
+target/

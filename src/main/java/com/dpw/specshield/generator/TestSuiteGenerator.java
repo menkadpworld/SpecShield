@@ -92,6 +92,7 @@ public class TestSuiteGenerator {
             cases.add(tc);
         }
 
+        suite.setBaseUrl(inputHeaders.get("baseUrl"));
         suite.setTestCases(cases);
         return suite;
     }
