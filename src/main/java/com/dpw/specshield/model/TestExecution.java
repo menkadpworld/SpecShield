@@ -20,7 +20,7 @@ public class TestExecution {
     @Data
     public static class RequestDetails {
         private Map<String, String> headers;
-        private Object payload;
+        private String payload;
         private String curl;
     }
 

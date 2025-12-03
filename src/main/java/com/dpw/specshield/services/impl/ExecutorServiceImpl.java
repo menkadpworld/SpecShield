@@ -17,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -162,7 +165,8 @@ public class ExecutorServiceImpl implements IExecutorService {
     }
 
     @KafkaListener(topics = "${specshield.kafka.topics.test-execution}")
-    public void processTestExecutionRequest(String executionId, TestExecutionRequest request) {
+    public void processTestExecutionRequest(@Header(KafkaHeaders.RECEIVED_KEY) String executionId,
+                                          @Payload TestExecutionRequest request) {
         log.info("Received test execution request from Kafka with ID: {}", executionId);
 
         try {
@@ -171,8 +175,7 @@ public class ExecutorServiceImpl implements IExecutorService {
             testExecutionRequestRepository.save(request);
 
             // Create initial test result with pending status
-            TestResult initialResult = createInitialTestResult(request);
-            testResultRepository.save(initialResult);
+            TestResult initialResult = testResultRepository.findById(executionId).get();
 
             // Execute the test suite asynchronously
             executeTestSuiteAsync(request, initialResult);
@@ -183,21 +186,6 @@ public class ExecutorServiceImpl implements IExecutorService {
             request.setStatus("FAILED");
             testExecutionRequestRepository.save(request);
         }
-    }
-
-    private TestResult createInitialTestResult(TestExecutionRequest request) {
-        TestResult result = new TestResult();
-        result.setId(request.getId());
-        result.setTestSuiteName(request.getTestSuiteName());
-        result.setExecutionStartTime(LocalDateTime.now());
-        result.setStatus("PENDING");
-        result.setTotalTests(request.getTestSuite().getTestCases().size());
-        result.setPendingTests(request.getTestSuite().getTestCases().size());
-        result.setSuccessfulTests(0);
-        result.setErrorTests(0);
-        result.setWarningTests(0);
-        result.setExecutions(new ArrayList<>());
-        return result;
     }
 
     private void executeTestSuiteAsync(TestExecutionRequest request, TestResult testResult) {
@@ -383,7 +371,18 @@ public class ExecutorServiceImpl implements IExecutorService {
     private TestExecution.RequestDetails buildRequestDetails(TestCase testCase, String fullUrl) {
         TestExecution.RequestDetails details = new TestExecution.RequestDetails();
         details.setHeaders(testCase.getRequest().getHeaders());
-        details.setPayload(testCase.getRequest().getBody());
+
+        // Serialize payload to JSON string to avoid MongoDB serialization issues
+        if (testCase.getRequest().getBody() != null) {
+            try {
+                details.setPayload(objectMapper.writeValueAsString(testCase.getRequest().getBody()));
+            } catch (Exception e) {
+                details.setPayload(testCase.getRequest().getBody().toString());
+            }
+        } else {
+            details.setPayload(null);
+        }
+
         details.setCurl(buildCurlCommand(testCase, fullUrl));
         return details;
     }

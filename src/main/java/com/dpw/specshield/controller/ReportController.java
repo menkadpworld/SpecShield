@@ -1,27 +1,15 @@
 package com.dpw.specshield.controller;
 
-import com.dpw.specshield.generator.TestSuiteGenerator;
-import com.dpw.specshield.generator.TestSuiteSerializer;
-import com.dpw.specshield.model.TestSuite;
-import com.dpw.specshield.parser.SwaggerParser;
 import com.dpw.specshield.services.TestSuiteService;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.dpw.specshield.config.KafkaConfig;
 import com.dpw.specshield.dto.TestReportResponse;
-import com.dpw.specshield.model.TestExecutionRequest;
-import com.dpw.specshield.model.TestSuite;
-import com.dpw.specshield.repository.TestExecutionRequestRepository;
 import com.dpw.specshield.services.IReportCollector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @Slf4j
@@ -30,11 +18,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReportController {
 
-    private final TestExecutionRequestRepository testExecutionRequestRepository;
     private final IReportCollector reportCollector;
-    private final KafkaTemplate<String, TestExecutionRequest> kafkaTemplate;
-    private final KafkaConfig kafkaConfig;
-    private TestSuiteService testSuiteService;
+    private final TestSuiteService testSuiteService;
 
     @GetMapping("/report/{id}")
     public ResponseEntity<TestReportResponse> getReportById(@PathVariable String id) {

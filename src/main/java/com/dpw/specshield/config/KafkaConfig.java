@@ -69,7 +69,7 @@ public class KafkaConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
 
-        JsonDeserializer<TestExecutionRequest> jsonDeserializer = new JsonDeserializer<>(objectMapper);
+        JsonDeserializer<TestExecutionRequest> jsonDeserializer = new JsonDeserializer<>(TestExecutionRequest.class, objectMapper);
         jsonDeserializer.addTrustedPackages("com.dpw.specshield.model");
         jsonDeserializer.setUseTypeHeaders(false);
 
