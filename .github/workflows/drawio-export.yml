@@ -24,7 +24,7 @@ jobs:
             for f in $(find diagrams -name '*.drawio'); do
               base=$(basename "$f" .drawio)
               drawio --no-sandbox -x -f svg -o /data/diagrams/rendered "$f"
-              echo "Exported $f → diagrams/rendered/$base.png"
+              echo "Exported $f → diagrams/rendered/$base.svg"
             done
 
       - name: Commit rendered SVGs

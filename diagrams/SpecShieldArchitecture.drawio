@@ -115,7 +115,7 @@
         <mxCell id="LegendAPI-39" value="API/External" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" parent="1" vertex="1">
           <mxGeometry x="790" y="400" width="80" height="25" as="geometry" />
         </mxCell>
-        <mxCell id="FlowDesc-40" value="&lt;b&gt;Flow Description:&lt;/b&gt;&lt;br&gt;1. Swagger contract parsed into API models&lt;br&gt;2. Test suite generated with seed data&lt;br&gt;3. Serialized and queued for execution&lt;br&gt;4. Parallel execution by URL groups&lt;br&gt;5. Real-time results stored in Mongo&lt;br&gt;6. Reports accessible via REST API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;fontSize=11;" parent="1" vertex="1">
+        <mxCell id="FlowDesc-40" value="&lt;b&gt;Flow Description:&lt;/b&gt;&lt;br&gt;1. Swagger contract parsed into API models&lt;br&gt;2. Test suite generated with seed data&lt;br&gt;3. Serialized and queued for execution&lt;br&gt;4. Parallel execution by URL groups&lt;br&gt;5. Real-time results stored in Mongo&lt;br&gt;6. Reports accessible via REST API calls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;fontSize=11;" parent="1" vertex="1">
           <mxGeometry x="700" y="450" width="250" height="120" as="geometry" />
         </mxCell>
       </root>
