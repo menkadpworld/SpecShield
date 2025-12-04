@@ -3,6 +3,7 @@ package com.dpw.specshield.controller;
 import com.dpw.specshield.services.TestSuiteService;
 import com.dpw.specshield.dto.TestReportResponse;
 import com.dpw.specshield.services.IReportCollector;
+import com.dpw.specshield.model.TestExecution;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,14 +23,32 @@ public class ReportController {
     private final TestSuiteService testSuiteService;
 
     @GetMapping("/report/{id}")
-    public ResponseEntity<TestReportResponse> getReportById(@PathVariable String id) {
-        log.info("Received report request for ID: {}", id);
+    public ResponseEntity<TestReportResponse> getReportById(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("Received report request for ID: {}, page: {}, size: {}", id, page, size);
 
         try {
-            TestReportResponse report = reportCollector.getReportById(id);
+            TestReportResponse report = reportCollector.getReportById(id, page, size);
             return ResponseEntity.ok(report);
         } catch (RuntimeException e) {
             log.error("Report not found: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/report/{id}/testcase/{testCaseId}")
+    public ResponseEntity<TestExecution> getTestCaseDetail(
+            @PathVariable String id,
+            @PathVariable String testCaseId) {
+        log.info("Received test case detail request for report ID: {} and test case ID: {}", id, testCaseId);
+
+        try {
+            TestExecution testExecution = reportCollector.getTestCaseDetail(id, testCaseId);
+            return ResponseEntity.ok(testExecution);
+        } catch (RuntimeException e) {
+            log.error("Test case detail not found: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
