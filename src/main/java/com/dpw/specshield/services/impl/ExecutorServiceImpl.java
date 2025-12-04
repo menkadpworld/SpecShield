@@ -379,13 +379,15 @@ public class ExecutorServiceImpl implements IExecutorService {
 
 
     private boolean validateResponse(ResponseEntity<String> response, ExpectedResult expectedResult) {
+        // First validate the primary status code expectation
         if (!Integer.valueOf(response.getStatusCode().value()).equals(expectedResult.getStatusCode())) {
             return false;
         }
 
-        if (expectedResult.getAssertions() != null && response.getBody() != null) {
+        // Then validate all assertions
+        if (expectedResult.getAssertions() != null) {
             for (TestAssertion assertion : expectedResult.getAssertions()) {
-                if (!validateTestAssertion(response.getBody(), assertion)) {
+                if (!validateAssertion(response, assertion)) {
                     return false;
                 }
             }
@@ -394,9 +396,50 @@ public class ExecutorServiceImpl implements IExecutorService {
         return true;
     }
 
+    private boolean validateAssertion(ResponseEntity<String> response, TestAssertion assertion) {
+        // Handle status code assertions
+        if ("statusCode".equals(assertion.getType())) {
+            int statusCode = response.getStatusCode().value();
+            switch (assertion.getCondition()) {
+                case "EQUALS":
+                    return Objects.equals(String.valueOf(statusCode), assertion.getExpectedValue());
+                case "IN_RANGE":
+                    return statusCode >= assertion.getMin() && statusCode <= assertion.getMax();
+                default:
+                    log.warn("Unknown status code assertion condition: {}", assertion.getCondition());
+                    return true;
+            }
+        }
+
+        // Handle body assertions
+        if ("body".equals(assertion.getType()) && response.getBody() != null) {
+            return validateTestAssertion(response.getBody(), assertion);
+        }
+
+        // For other types, use the original validation method
+        if (response.getBody() != null) {
+            return validateTestAssertion(response.getBody(), assertion);
+        }
+
+        return true;
+    }
+
 
     private boolean validateTestAssertion(String responseBody, TestAssertion assertion) {
         try {
+            // Handle status code assertions differently - they don't use JsonPath
+            if ("statusCode".equals(assertion.getType())) {
+                // Status code assertions are handled at the response level, not here
+                return true;
+            }
+
+            // For body assertions, we need a jsonPath
+            if (assertion.getJsonPath() == null || assertion.getJsonPath().isEmpty()) {
+                log.warn("JsonPath is required for non-statusCode assertion type: {} with condition: {}",
+                         assertion.getType(), assertion.getCondition());
+                return false;
+            }
+
             Object value = JsonPath.read(responseBody, assertion.getJsonPath());
 
             switch (assertion.getCondition()) {
@@ -404,13 +447,26 @@ public class ExecutorServiceImpl implements IExecutorService {
                     return value != null && !value.toString().isEmpty();
                 case "NOT_NULL":
                     return value != null;
+                case "NOT_NULL_OR_EMPTY":
+                    return value != null && !value.toString().trim().isEmpty();
                 case "EQUALS":
                     return Objects.equals(value != null ? value.toString() : null, assertion.getExpectedValue());
+                case "IN_RANGE":
+                    if (value == null) return false;
+                    try {
+                        int intValue = Integer.parseInt(value.toString());
+                        return intValue >= assertion.getMin() && intValue <= assertion.getMax();
+                    } catch (NumberFormatException e) {
+                        log.warn("Cannot convert value {} to integer for IN_RANGE assertion", value);
+                        return false;
+                    }
                 default:
+                    log.warn("Unknown assertion condition: {}", assertion.getCondition());
                     return true;
             }
         } catch (Exception e) {
-            log.warn("Failed to validate test assertion {}: {}", assertion.getJsonPath(), e.getMessage());
+            log.warn("Failed to validate test assertion {} with path {}: {}",
+                     assertion.getCondition(), assertion.getJsonPath(), e.getMessage());
             return false;
         }
     }
@@ -530,17 +586,15 @@ public class ExecutorServiceImpl implements IExecutorService {
     }
 
     private boolean validateResponseFromRestException(HttpClientErrorException exception, ExpectedResult expectedResult) {
+        // First validate the primary status code expectation
         if (!Integer.valueOf(exception.getStatusCode().value()).equals(expectedResult.getStatusCode())) {
             return false;
         }
 
-        if (expectedResult.getAssertions() != null && exception.getResponseBodyAsString() != null) {
+        // Then validate all assertions
+        if (expectedResult.getAssertions() != null) {
             for (TestAssertion assertion : expectedResult.getAssertions()) {
-                // Skip status code assertions as they are already validated above
-                if ("statusCode".equals(assertion.getType())) {
-                    continue;
-                }
-                if (!validateTestAssertion(exception.getResponseBodyAsString(), assertion)) {
+                if (!validateAssertionFromException(exception, assertion)) {
                     return false;
                 }
             }
@@ -550,20 +604,58 @@ public class ExecutorServiceImpl implements IExecutorService {
     }
 
     private boolean validateResponseFromRestException(HttpServerErrorException exception, ExpectedResult expectedResult) {
+        // First validate the primary status code expectation
         if (!Integer.valueOf(exception.getStatusCode().value()).equals(expectedResult.getStatusCode())) {
             return false;
         }
 
-        if (expectedResult.getAssertions() != null && exception.getResponseBodyAsString() != null) {
+        // Then validate all assertions
+        if (expectedResult.getAssertions() != null) {
             for (TestAssertion assertion : expectedResult.getAssertions()) {
-                // Skip status code assertions as they are already validated above
-                if ("statusCode".equals(assertion.getType())) {
-                    continue;
-                }
-                if (!validateTestAssertion(exception.getResponseBodyAsString(), assertion)) {
+                if (!validateAssertionFromException(exception, assertion)) {
                     return false;
                 }
             }
+        }
+
+        return true;
+    }
+
+    private boolean validateAssertionFromException(Exception exception, TestAssertion assertion) {
+        int statusCode;
+        String responseBody;
+
+        if (exception instanceof HttpClientErrorException clientException) {
+            statusCode = clientException.getStatusCode().value();
+            responseBody = clientException.getResponseBodyAsString();
+        } else if (exception instanceof HttpServerErrorException serverException) {
+            statusCode = serverException.getStatusCode().value();
+            responseBody = serverException.getResponseBodyAsString();
+        } else {
+            return false;
+        }
+
+        // Handle status code assertions
+        if ("statusCode".equals(assertion.getType())) {
+            switch (assertion.getCondition()) {
+                case "EQUALS":
+                    return Objects.equals(String.valueOf(statusCode), assertion.getExpectedValue());
+                case "IN_RANGE":
+                    return statusCode >= assertion.getMin() && statusCode <= assertion.getMax();
+                default:
+                    log.warn("Unknown status code assertion condition: {}", assertion.getCondition());
+                    return true;
+            }
+        }
+
+        // Handle body assertions
+        if ("body".equals(assertion.getType()) && responseBody != null) {
+            return validateTestAssertion(responseBody, assertion);
+        }
+
+        // For other types, use the original validation method
+        if (responseBody != null) {
+            return validateTestAssertion(responseBody, assertion);
         }
 
         return true;
