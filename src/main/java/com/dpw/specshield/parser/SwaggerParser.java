@@ -92,8 +92,11 @@ public class SwaggerParser {
 
     private boolean skipEndpoint(String path, String httpMethod) {
         String p = path.toLowerCase();
-        if ("PATCH".equalsIgnoreCase(httpMethod) || "PUT".equalsIgnoreCase(httpMethod)
-                || "OPTIONS".equalsIgnoreCase(httpMethod) ||"HEAD".equalsIgnoreCase(httpMethod)) return true;
+        if ("PATCH".equalsIgnoreCase(httpMethod)
+                || "PUT".equalsIgnoreCase(httpMethod)
+                || "OPTIONS".equalsIgnoreCase(httpMethod)
+                ||"HEAD".equalsIgnoreCase(httpMethod)
+                ||"DELETE".equalsIgnoreCase(httpMethod)) return true;
         if ("POST".equalsIgnoreCase(httpMethod) && !p.contains("list")) return true;
         return p.contains("create");
     }
