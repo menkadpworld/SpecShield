@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class PayloadGenerator {
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -18,6 +20,7 @@ public class PayloadGenerator {
 
     private JsonNode generateFromSchema(JsonNode schemaNode, JsonNode components) {
         ObjectNode payload = mapper.createObjectNode();
+
 
         if (schemaNode == null || schemaNode.isMissingNode()) {
             payload.put("sampleField", "sampleValue");
@@ -51,12 +54,12 @@ public class PayloadGenerator {
 
             // Skip filter entirely (generate empty object)
             if (fieldName.equalsIgnoreCase("filter") && "object".equalsIgnoreCase(type)) {
-                payload.set(fieldName, mapper.createObjectNode());
+                //payload.set(fieldName, null);
                 return;
             }
 
             if (fieldName.equalsIgnoreCase("search") && "object".equalsIgnoreCase(type)) {
-                payload.set(fieldName, mapper.createObjectNode());
+                //payload.set(fieldName, null);
                 return;
             }
 

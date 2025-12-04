@@ -91,8 +91,8 @@ public class TestSuiteGenerator {
             tc.setExpected(expected);
             cases.add(tc);
 
-            addInvalidIdForGetTestCase(api, counter, inputHeaders, cases);
-            addInvalidPaginationTestCase(api, counter, inputHeaders, cases, components);
+            addInvalidIdForGetTestCase(api, inputHeaders, cases);
+            addInvalidPaginationTestCase(api, inputHeaders, cases, components);
         }
 
         suite.setBaseUrl(inputHeaders.get("baseUrl"));
@@ -100,7 +100,7 @@ public class TestSuiteGenerator {
         return suite;
     }
 
-    private void addInvalidIdForGetTestCase(ApiSpec api,int counter, Map<String, String> inputHeaders, List<TestCase> cases)
+    private void addInvalidIdForGetTestCase(ApiSpec api, Map<String, String> inputHeaders, List<TestCase> cases)
     {
         if ("GET".equalsIgnoreCase(api.getMethod())) {
 
@@ -138,7 +138,7 @@ public class TestSuiteGenerator {
     }
 
 
-    private void addInvalidPaginationTestCase(ApiSpec api,int counter, Map<String, String> inputHeaders, List<TestCase> cases, JsonNode components)
+    private void addInvalidPaginationTestCase(ApiSpec api, Map<String, String> inputHeaders, List<TestCase> cases, JsonNode components)
     {
         // INVALID PAGINATION TEST CASE FOR POST APIs
         if ("POST".equalsIgnoreCase(api.getMethod())) {
