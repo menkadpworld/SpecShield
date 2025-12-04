@@ -36,38 +36,34 @@ services:
       retries: 5
 
   kafka:
-    image: bitnami/kafka:latest
+    image: apache/kafka:latest
     container_name: specshield-kafka
-    hostname: kafka
     ports:
       - "9092:9092"
-      - "9093:9093"
     environment:
-      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://specshield-kafka:9092"
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CFG_NODE_ID: "0"
-      KAFKA_CFG_PROCESS_ROLES: "broker,controller"
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "0@kafka:9093"
-      KAFKA_CFG_MESSAGE_MAX_BYTES: "524288000"              # broker
-      KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES: "524288000"       # socket layer LIMIT
-      KAFKA_CFG_RECEIVE_BUFFER_BYTES: "524288000"           # network receive
-      KAFKA_CFG_SEND_BUFFER_BYTES: "524288000"              # network send
-      KAFKA_CFG_MAX_REQUEST_SIZE: "524288000"               # client request limit
-      KAFKA_CFG_REPLICA_FETCH_MAX_BYTES: "524288000"
-      KAFKA_CFG_FETCH_MESSAGE_MAX_BYTES: "524288000"
-      PATH: "/opt/bitnami/common/bin:/opt/bitnami/java/bin:/opt/bitnami/kafka/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-      JAVA_HOME: "/opt/bitnami/java"
-      HOME: "/"
-      OS_ARCH: "arm64"
-      OS_FLAVOUR: "debian-12"
-      OS_NAME: "linux"
-      APP_VERSION: "3.9.0"
-      BITNAMI_APP_NAME: "kafka"
-    entrypoint: ["/opt/bitnami/scripts/kafka/entrypoint.sh"]
-    command: ["/opt/bitnami/scripts/kafka/run.sh"]
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+
+      # Increase payload support (matching your earlier Bitnami config)
+      KAFKA_MESSAGE_MAX_BYTES: "524288000"
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: "524288000"
+      KAFKA_RECEIVE_BUFFER_BYTES: "524288000"
+      KAFKA_SEND_BUFFER_BYTES: "524288000"
+      KAFKA_MAX_REQUEST_SIZE: "524288000"
+      KAFKA_REPLICA_FETCH_MAX_BYTES: "524288000"
+      KAFKA_FETCH_MESSAGE_MAX_BYTES: "524288000"
     healthcheck:
-      test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
+      test: [ "CMD", "bash", "-c", "echo >/dev/tcp/localhost/9092" ]
       interval: 10s
       timeout: 5s
       retries: 10
