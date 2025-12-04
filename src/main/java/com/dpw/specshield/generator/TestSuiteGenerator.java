@@ -13,6 +13,7 @@ public class TestSuiteGenerator {
     private final PayloadGenerator payloadGenerator = new PayloadGenerator();
     private final ObjectMapper mapper = new ObjectMapper();
     private final TestIdMapping testIdMapping;
+    int counter = 0;
 
     public TestSuiteGenerator(TestIdMapping testIdMapping) {
         this.testIdMapping = testIdMapping;
@@ -24,7 +25,7 @@ public class TestSuiteGenerator {
         TestSuite suite = new TestSuite();
         suite.setTestSuiteName(suiteName);
         List<TestCase> cases = new ArrayList<>();
-        int counter = 1;
+        counter = 1;
 
         for (ApiSpec api : apiSpecs) {
             // Skip APIs without response schema
