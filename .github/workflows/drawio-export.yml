@@ -1,0 +1,41 @@
+name: Export Draw.io Diagrams (SVG)
+
+on:
+  push:
+    paths:
+      - "**/*.drawio"
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Export drawio → SVG (public working image)
+        uses: addnab/docker-run-action@v3
+        with:
+          image: rlespinasse/drawio-export:latest
+          options: -v ${{ github.workspace }}:/data
+          run: |
+            mkdir -p /data/diagrams/rendered
+            for f in $(find /data/diagrams -name "*.drawio"); do
+              base=$(basename "$f" .drawio)
+              echo "Exporting $f → /data/diagrams/rendered/$base.svg"
+              drawio --export \
+                --format svg \
+                --no-sandbox \
+                --force \
+                --output "/data/diagrams/rendered/$base.svg" \
+                "$f"
+            done
+
+      - name: Commit rendered SVGs
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add diagrams/rendered/*.svg || true
+          git commit -m "Auto-rendered draw.io SVG diagrams" || echo "No changes"
+          git push

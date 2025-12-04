@@ -1,24 +1,55 @@
-# SpecShield Implementation
+# SpecShield - API Testing Automation Framework
 
 ## Overview
-SpecShield is a Spring Boot application that executes API tests based on Swagger specifications and provides detailed reporting capabilities.
+SpecShield is an intelligent API testing automation framework built with Spring Boot that automatically generates, executes, and reports on comprehensive test suites derived from Swagger/OpenAPI specifications. The platform leverages asynchronous processing with Kafka messaging and provides real-time test execution monitoring.
 
-## Features
-- **Test Execution**: Executes test suites with parallel processing grouped by URL
-- **MongoDB Integration**: Stores test results and reports
-- **REST API**: Provides endpoints for test execution and report retrieval
-- **Docker Support**: Containerized application with MongoDB
+## Key Features
 
-## Architecture
+### Core Capabilities
+- **Automatic Test Generation**: Converts Swagger/OpenAPI contracts into executable test suites
+- **Intelligent Test Execution**: Parallel processing with URL-based grouping for optimal performance
+- **Real-time Monitoring**: Live updates during test execution with comprehensive reporting
+- **Asynchronous Processing**: Kafka-based message queue for scalable test execution
+- **MongoDB Integration**: Persistent storage for test results, reports, and execution history
 
-### Services
-1. **IExecutorService**: Executes test cases with parallel processing
-2. **IReportCollector**: Retrieves and formats test reports
+### Advanced Testing Features
+- **Multi-HTTP Method Support**: GET, POST, PUT, DELETE, OPTIONS, HEAD
+- **Dynamic Parameter Handling**: Path parameters, query parameters, headers, and body payloads
+- **JSON Path Assertions**: Sophisticated response validation with configurable assertions
+- **Comprehensive Result Tracking**: Success, error, and warning categorization with detailed metrics
 
-### Key Components
-- **Test Models**: TestSuite, TestCase, Endpoint, Request, Expected, Assertion
-- **Result Models**: TestResult, TestExecution, TestReportResponse
-- **Repository**: TestResultRepository for MongoDB operations
+## System Architecture
+
+### Core Services
+1. **TestSuiteService**: Orchestrates test suite generation and execution workflow
+2. **ExecutorService**: Manages parallel test execution with real-time result updates
+3. **ReportCollector**: Aggregates and formats comprehensive test reports
+4. **SwaggerParser**: Processes OpenAPI/Swagger specifications
+5. **TestSuiteGenerator**: Creates executable test cases from API specifications
+
+### Data Flow Components
+- **SwaggerToApiModelConverter**: Transforms parsed Swagger into internal API models
+- **TestSuiteSerializer**: JSON serialization for test suite persistence
+- **PayloadGenerator**: Creates dynamic request payloads for test cases
+
+### Storage & Messaging
+- **MongoDB Repositories**: TestResultRepository, TestExecutionRequestRepository
+- **Kafka Integration**: Asynchronous test execution queue processing
+- **Real-time Updates**: Live progress tracking during test execution
+
+## System Design
+
+The complete system architecture and data flow is illustrated in the ![System Architecture](diagrams/rendered/system.svg). This diagram shows:
+
+1. **Input Processing**: Swagger/OpenAPI contract parsing and API model conversion
+2. **Test Generation**: Automated test suite creation with seed data integration
+3. **Serialization Flow**: TestSuiteSerializer component for JSON serialization
+4. **Execution Pipeline**: Asynchronous processing via Kafka messaging queue
+5. **Parallel Processing**: URL-based grouping for optimal test execution performance
+6. **Real-time Storage**: MongoDB integration with live result updates
+7. **API Layer**: REST endpoints for test generation and report retrieval
+
+> **Note**: To view the system design diagram, open `SpecShield.drawio` in [draw.io](https://app.diagrams.net/) or any compatible diagram viewer.
 
 ## API Endpoints
 

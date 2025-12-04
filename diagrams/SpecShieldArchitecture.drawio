@@ -1,0 +1,151 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.8 Chrome/140.0.7339.240 Electron/38.4.0 Safari/537.36" version="28.2.8">
+  <diagram name="SpecShield System Architecture" id="b8Zzki_2SqpVH1TPxw2J">
+    <mxGraphModel dx="1645" dy="1092" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Title-1" value="SpecShield API Testing Framework - System Architecture" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;fontStyle=1;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="50" y="20" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="SwaggerInput-2" value="&lt;b&gt;Client / User&lt;br&gt;&lt;/b&gt;&lt;br&gt;Swagger / Open API Contract" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="10" y="270" width="180" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="SwaggerParser-3" target="ApiModelConverter-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SwaggerParser-3" value="Swagger Parser" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="350" y="260" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="ApiModelConverter-4" target="TestSuiteSerializer-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ApiModelConverter-4" value="API Model Converter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="350" y="360" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="TestSuiteGenerator-5" target="TestSuiteService-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TestSuiteGenerator-5" value="Test Suite Generator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="490" y="260" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SeedData-6" value="Seed Data / Headers" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="490" y="150" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="TestSuiteSerializer-7" target="TestSuiteGenerator-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TestSuiteSerializer-7" value="TestSuite Serializer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="490" y="360" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TestSuiteService-8" value="TestSuite Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="650" y="310" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ExecutorService-10" value="Executor Service&#xa;(Parallel Processing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="410" y="450" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ReportController-15" value="Report Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="400" y="620" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Arrow-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="SwaggerInput-2" target="SwaggerParser-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Arrow-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="SeedData-6" target="TestSuiteGenerator-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Arrow-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=-0.036;entryY=0.689;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;strokeColor=#82b366;fillColor=#d5e8d4;gradientColor=#97d077;" parent="1" source="TestSuiteService-8" target="jC2BAJ6XGugpmI_M3CBD-4" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="850" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Legend-33" value="Legend:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="790" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="LegendInput-34" value="Input/Data" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="820" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="LegendProcessing-35" value="Processing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="130" y="820" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="LegendGeneration-36" value="Generation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="855" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="LegendExecution-37" value="Execution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="130" y="855" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="LegendMessaging-38" value="Messaging" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="890" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="LegendAPI-39" value="API/External" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="130" y="890" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="FlowDesc-40" value="&lt;b&gt;Flow Description:&lt;br&gt;&lt;/b&gt;&lt;br&gt;&lt;ol&gt;&lt;li&gt;Swagger contract parsed into API models&lt;/li&gt;&lt;li&gt;Test suite generated with seed data&lt;/li&gt;&lt;li&gt;Serialized and queued for execution&lt;/li&gt;&lt;li&gt;Parallel execution by URL groups&lt;/li&gt;&lt;li&gt;Real-time results stored in MongoDB&lt;/li&gt;&lt;li&gt;Reports accessible via REST API&lt;/li&gt;&lt;/ol&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="280" y="760" width="250" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-4" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;fillColor=#FF6A00;strokeColor=none;shape=mxgraph.alibaba_cloud.kafka;" vertex="1" parent="1">
+          <mxGeometry x="920" y="360" width="82.35" height="61" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-5" value="KAFKA&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="911.1800000000001" y="410" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-7" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;fillColor=#FF6A00;strokeColor=none;shape=mxgraph.alibaba_cloud.mongodb;" vertex="1" parent="1">
+          <mxGeometry x="924.95" y="500" width="77.4" height="77.4" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-10" value="&lt;b&gt;MongoDB&lt;/b&gt;&lt;br&gt;(TestResult Collection)&lt;br&gt;Real-time Updates" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="870" y="580" width="174.7" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-11" value="/generate" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="280" y="250" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-18" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.052;exitY=0.271;exitDx=0;exitDy=0;exitPerimeter=0;strokeColor=#B20000;strokeWidth=2;fillColor=#e51400;" edge="1" parent="1" source="jC2BAJ6XGugpmI_M3CBD-7" target="TestSuiteService-8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="920" y="460" as="sourcePoint" />
+            <mxPoint x="550" y="490" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="710" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-21" value="" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#82b366;fontStyle=1;strokeWidth=2;fillColor=#d5e8d4;gradientColor=#97d077;" edge="1" parent="1" target="ExecutorService-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="920" y="430" as="sourcePoint" />
+            <mxPoint x="550" y="490" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="920" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.664;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitPerimeter=0;" edge="1" parent="1" source="SwaggerInput-2" target="ReportController-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="270" y="510" as="sourcePoint" />
+            <mxPoint x="380" y="360" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="270" y="509" />
+              <mxPoint x="270" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-23" value="/report/{id}" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="280" y="600" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-24" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.065;entryY=0.775;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=#e51400;strokeColor=#B20000;strokeWidth=2;" edge="1" parent="1" source="ExecutorService-10" target="jC2BAJ6XGugpmI_M3CBD-7">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="540" as="sourcePoint" />
+            <mxPoint x="550" y="490" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="475" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jC2BAJ6XGugpmI_M3CBD-26" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=#e51400;strokeColor=#B20000;strokeWidth=2;" edge="1" parent="1" source="ReportController-15" target="jC2BAJ6XGugpmI_M3CBD-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="790" y="560" as="sourcePoint" />
+            <mxPoint x="1240" y="610" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="957" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,15 +1,13 @@
 package com.dpw.specshield.dto;
 
 import lombok.Data;
-import com.dpw.specshield.model.TestExecution;
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class TestReportResponse {
     private String reportTimestamp;
     private Overview overview;
-    private List<TestExecution> executionDetails;
+    private List<TestExecutionSummary> executionDetails;
 
     @Data
     public static class Overview {
@@ -18,14 +16,7 @@ public class TestReportResponse {
         private Integer errors;
         private Integer warnings;
         private Integer successful;
-        private Map<String, PathStats> paths;
+        private Integer pending;
     }
 
-    @Data
-    public static class PathStats {
-        private Integer total;
-        private Integer successful;
-        private Integer errors;
-        private Integer warnings;
-    }
 }

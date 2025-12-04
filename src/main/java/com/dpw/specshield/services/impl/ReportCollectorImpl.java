@@ -1,6 +1,7 @@
 package com.dpw.specshield.services.impl;
 
 import com.dpw.specshield.dto.TestReportResponse;
+import com.dpw.specshield.dto.TestExecutionSummary;
 import com.dpw.specshield.model.TestResult;
 import com.dpw.specshield.model.TestExecution;
 import com.dpw.specshield.repository.TestResultRepository;
@@ -10,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,8 +22,8 @@ public class ReportCollectorImpl implements IReportCollector {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss").withZone(java.time.ZoneId.systemDefault());
 
     @Override
-    public TestReportResponse getReportById(String reportId) {
-        log.info("Fetching report for ID: {}", reportId);
+    public TestReportResponse getReportById(String reportId, int page, int size) {
+        log.info("Fetching report for ID: {} with pagination - page: {}, size: {}", reportId, page, size);
 
         TestResult testResult = testResultRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + reportId));
@@ -43,51 +41,64 @@ public class ReportCollectorImpl implements IReportCollector {
         overview.setErrors(testResult.getErrorTests());
         overview.setWarnings(testResult.getWarningTests());
         overview.setSuccessful(testResult.getSuccessfulTests());
-
-        overview.setPaths(calculatePathStats(testResult.getExecutions()));
+        overview.setPending(testResult.getPendingTests());
 
         response.setOverview(overview);
-        response.setExecutionDetails(testResult.getExecutions());
 
-        log.info("Report retrieved successfully for ID: {}", reportId);
+        List<TestExecutionSummary> paginatedExecutions = getPaginatedExecutionSummaries(testResult.getExecutions(), page, size);
+        response.setExecutionDetails(paginatedExecutions);
+
+        log.info("Report retrieved successfully for ID: {} with {} execution details", reportId, paginatedExecutions.size());
         return response;
     }
 
-    private Map<String, TestReportResponse.PathStats> calculatePathStats(List<TestExecution> executions) {
+    private List<TestExecutionSummary> getPaginatedExecutionSummaries(List<TestExecution> executions, int page, int size) {
         if (executions == null || executions.isEmpty()) {
-            return new HashMap<>();
-        }
-        Map<String, List<TestExecution>> executionsByPath = executions.stream()
-            .collect(Collectors.groupingBy(TestExecution::getContractPath));
-
-        Map<String, TestReportResponse.PathStats> pathStatsMap = new HashMap<>();
-
-        for (Map.Entry<String, List<TestExecution>> entry : executionsByPath.entrySet()) {
-            String path = entry.getKey();
-            List<TestExecution> pathExecutions = entry.getValue();
-
-            TestReportResponse.PathStats pathStats = new TestReportResponse.PathStats();
-            pathStats.setTotal(pathExecutions.size());
-
-            long successCount = pathExecutions.stream()
-                .filter(e -> "success".equals(e.getResult()))
-                .count();
-
-            long errorCount = pathExecutions.stream()
-                .filter(e -> "error".equals(e.getResult()))
-                .count();
-
-            long warningCount = pathExecutions.stream()
-                .filter(e -> "warning".equals(e.getResult()))
-                .count();
-
-            pathStats.setSuccessful((int) successCount);
-            pathStats.setErrors((int) errorCount);
-            pathStats.setWarnings((int) warningCount);
-
-            pathStatsMap.put(path, pathStats);
+            return List.of();
         }
 
-        return pathStatsMap;
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, executions.size());
+
+        if (startIndex >= executions.size()) {
+            return List.of();
+        }
+
+        return executions.subList(startIndex, endIndex).stream()
+                .map(this::convertToSummary)
+                .toList();
     }
+
+    private TestExecutionSummary convertToSummary(TestExecution execution) {
+        TestExecutionSummary summary = new TestExecutionSummary();
+        summary.setId(execution.getId());
+        summary.setTimestamp(execution.getTimestamp());
+        summary.setScenario(execution.getScenario());
+        summary.setResult(execution.getResult());
+        summary.setResultDetails(execution.getResultDetails());
+        summary.setContractPath(execution.getContractPath());
+        summary.setHttpMethod(execution.getHttpMethod());
+        return summary;
+    }
+
+    @Override
+    public TestExecution getTestCaseDetail(String reportId, String testCaseId) {
+        log.info("Fetching test case detail for report ID: {} and test case ID: {}", reportId, testCaseId);
+
+        TestResult testResult = testResultRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found with ID: " + reportId));
+
+        if (testResult.getExecutions() == null || testResult.getExecutions().isEmpty()) {
+            throw new RuntimeException("No executions found for report ID: " + reportId);
+        }
+
+        TestExecution testExecution = testResult.getExecutions().stream()
+                .filter(execution -> testCaseId.equals(execution.getId()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Test case not found with ID: " + testCaseId + " in report: " + reportId));
+
+        log.info("Test case detail retrieved successfully for ID: {}", testCaseId);
+        return testExecution;
+    }
+
 }
