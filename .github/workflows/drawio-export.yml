@@ -14,27 +14,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install drawio CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          wget https://github.com/jgraph/drawio-desktop/releases/download/v24.7.7/drawio-amd64-24.7.7.deb
-          sudo dpkg -i drawio-amd64-24.7.7.deb || sudo apt --fix-broken install -y
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
 
-      - name: Export diagrams to SVG
+      - name: Install Draw.io CLI
+        run: npm install -g @drawio/batch-cli
+
+      - name: Export diagrams
         run: |
           mkdir -p diagrams/rendered
           for file in $(find diagrams -name "*.drawio"); do
             base=$(basename "$file" .drawio)
-            xvfb-run drawio --export --format svg --transparent \
-              --output "diagrams/rendered/$base.svg" "$file"
+            drawio-batch convert "$file" "diagrams/rendered/$base.svg" --format svg
             echo "Exported $file → diagrams/rendered/$base.svg"
           done
 
-      - name: Commit rendered PNGs
+      - name: Commit rendered SVGs
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          git add diagrams/rendered/*.png
-          git commit -m "Auto-rendered draw.io diagrams" || echo "No changes to commit"
+          git add diagrams/rendered/*.svg
+          git commit -m "Auto-rendered Draw.io diagrams" || echo "No changes to commit"
           git push
