@@ -10,20 +10,21 @@ import com.dpw.specshield.model.TestSuite;
 import com.dpw.specshield.services.IExecutorService;
 import com.dpw.specshield.repository.TestResultRepository;
 import com.dpw.specshield.repository.TestExecutionRequestRepository;
+import com.dpw.specshield.utils.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,7 +45,7 @@ import static org.springframework.http.HttpMethod.PUT;
 @RequiredArgsConstructor
 public class ExecutorServiceImpl implements IExecutorService {
 
-    private final WebClient webClient;
+    private final RestTemplate restTemplate;
     private final TestResultRepository testResultRepository;
     private final TestExecutionRequestRepository testExecutionRequestRepository;
     private final ObjectMapper objectMapper;
@@ -299,13 +300,23 @@ public class ExecutorServiceImpl implements IExecutorService {
 
             execution.setRequestDetails(buildRequestDetails(testCase, fullUrl));
 
-        } catch (WebClientResponseException e) {
-            execution.setResult("error");
-            execution.setResultDetails(String.format("HTTP Error: %s", e.getMessage()));
-            execution.setFullRequestPath(buildFullUrl(testCase, baseUrl));
-            execution.setRequestDetails(buildRequestDetails(testCase, buildFullUrl(testCase, baseUrl)));
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            String fullUrl = buildFullUrl(testCase, baseUrl);
+            execution.setFullRequestPath(fullUrl);
+            execution.setRequestDetails(buildRequestDetails(testCase, fullUrl));
+            execution.setResponseDetails(buildResponseDetailsFromRestException(e));
 
-            execution.setResponseDetails(buildResponseDetailsFromException(e));
+            // Check if this is an expected error status code
+            boolean testPassed = validateResponseFromRestException(e, execution.getExpectedResult());
+
+            if (testPassed) {
+                execution.setResult("success");
+                execution.setResultDetails(String.format("Response matched expected: actual [%d]", e.getStatusCode().value()));
+            } else {
+                execution.setResult("error");
+                execution.setResultDetails(String.format("Unexpected behaviour: expected [%d], actual [%d]",
+                        execution.getExpectedResult().getStatusCode(), e.getStatusCode().value()));
+            }
         } catch (Exception e) {
             log.error("Error executing test case {}: {}", testCase.getTestCaseId(), e.getMessage());
             execution.setResult("error");
@@ -326,33 +337,23 @@ public class ExecutorServiceImpl implements IExecutorService {
         String url = buildFullUrl(testCase, baseUrl);
         HttpMethod method = HttpMethod.valueOf(testCase.getEndpoint().getMethod().toUpperCase());
 
-        WebClient.RequestHeadersSpec<?> request;
-
-        if (method == GET) {
-            request = webClient.get().uri(url);
-        } else if (method == POST) {
-            request = webClient.post()
-                    .uri(url)
-                    .bodyValue(testCase.getRequest().getBody() != null ? testCase.getRequest().getBody() : "");
-        } else if (method == PUT) {
-            request = webClient.put()
-                    .uri(url)
-                    .bodyValue(testCase.getRequest().getBody() != null ? testCase.getRequest().getBody() : "");
-        } else if (method == DELETE) {
-            request = webClient.delete().uri(url);
-        } else if (method == OPTIONS) {
-            request = webClient.options().uri(url);
-        } else if (method == HEAD) {
-            request = webClient.head().uri(url);
-        } else {
-            throw new UnsupportedOperationException("HTTP method not supported: " + method);
-        }
-
+        // Build headers
+        HttpHeaders headers = new HttpHeaders();
         if (testCase.getRequest().getHeaders() != null) {
-            testCase.getRequest().getHeaders().forEach(request::header);
+            testCase.getRequest().getHeaders().forEach(headers::add);
         }
 
-        return request.retrieve().toEntity(String.class).block();
+        // Build request body
+        String requestBody = null;
+        if (testCase.getRequest().getBody() != null) {
+            requestBody = JsonUtils.toJsonString(testCase.getRequest().getBody());
+        }
+
+        // Create HTTP entity
+        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+
+        // Make the request using RestTemplate
+        return restTemplate.exchange(url, method, entity, String.class);
     }
 
     private String buildFullUrl(TestCase testCase, String baseUrl) {
@@ -480,13 +481,14 @@ public class ExecutorServiceImpl implements IExecutorService {
         return details;
     }
 
-    private TestExecution.ResponseDetails buildResponseDetailsFromException(WebClientResponseException e) {
+
+    private TestExecution.ResponseDetails buildResponseDetailsFromRestException(HttpClientErrorException e) {
         TestExecution.ResponseDetails details = new TestExecution.ResponseDetails();
         details.setResponseStatus(e.getStatusCode().value());
         details.setResponseBody(e.getResponseBodyAsString());
 
         Map<String, String> headerMap = new HashMap<>();
-        e.getHeaders().forEach((key, values) -> {
+        e.getResponseHeaders().forEach((key, values) -> {
             if (values != null && !values.isEmpty()) {
                 headerMap.put(key, String.join(", ", values));
             }
@@ -494,5 +496,85 @@ public class ExecutorServiceImpl implements IExecutorService {
         details.setResponseHeaders(headerMap);
 
         return details;
+    }
+
+    private TestExecution.ResponseDetails buildResponseDetailsFromRestException(HttpServerErrorException e) {
+        TestExecution.ResponseDetails details = new TestExecution.ResponseDetails();
+        details.setResponseStatus(e.getStatusCode().value());
+        details.setResponseBody(e.getResponseBodyAsString());
+
+        Map<String, String> headerMap = new HashMap<>();
+        e.getResponseHeaders().forEach((key, values) -> {
+            if (values != null && !values.isEmpty()) {
+                headerMap.put(key, String.join(", ", values));
+            }
+        });
+        details.setResponseHeaders(headerMap);
+
+        return details;
+    }
+
+    private TestExecution.ResponseDetails buildResponseDetailsFromRestException(Exception e) {
+        if (e instanceof HttpClientErrorException clientException) {
+            return buildResponseDetailsFromRestException(clientException);
+        } else if (e instanceof HttpServerErrorException serverException) {
+            return buildResponseDetailsFromRestException(serverException);
+        }
+
+        // Fallback for other exceptions
+        TestExecution.ResponseDetails details = new TestExecution.ResponseDetails();
+        details.setResponseStatus(null);
+        details.setResponseBody("Error occurred: " + e.getMessage());
+        details.setResponseHeaders(new HashMap<>());
+        return details;
+    }
+
+    private boolean validateResponseFromRestException(HttpClientErrorException exception, ExpectedResult expectedResult) {
+        if (!Integer.valueOf(exception.getStatusCode().value()).equals(expectedResult.getStatusCode())) {
+            return false;
+        }
+
+        if (expectedResult.getAssertions() != null && exception.getResponseBodyAsString() != null) {
+            for (TestAssertion assertion : expectedResult.getAssertions()) {
+                // Skip status code assertions as they are already validated above
+                if ("statusCode".equals(assertion.getType())) {
+                    continue;
+                }
+                if (!validateTestAssertion(exception.getResponseBodyAsString(), assertion)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean validateResponseFromRestException(HttpServerErrorException exception, ExpectedResult expectedResult) {
+        if (!Integer.valueOf(exception.getStatusCode().value()).equals(expectedResult.getStatusCode())) {
+            return false;
+        }
+
+        if (expectedResult.getAssertions() != null && exception.getResponseBodyAsString() != null) {
+            for (TestAssertion assertion : expectedResult.getAssertions()) {
+                // Skip status code assertions as they are already validated above
+                if ("statusCode".equals(assertion.getType())) {
+                    continue;
+                }
+                if (!validateTestAssertion(exception.getResponseBodyAsString(), assertion)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean validateResponseFromRestException(Exception exception, ExpectedResult expectedResult) {
+        if (exception instanceof HttpClientErrorException clientException) {
+            return validateResponseFromRestException(clientException, expectedResult);
+        } else if (exception instanceof HttpServerErrorException serverException) {
+            return validateResponseFromRestException(serverException, expectedResult);
+        }
+        return false;
     }
 }
